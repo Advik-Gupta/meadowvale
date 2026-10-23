@@ -379,6 +379,10 @@ function itemDemand() {
   for (const p of (S.air && S.air.planes) || [])
     if (p.st === "docked" && p.crates)
       for (const c of p.crates) if (!c.filled) want(c.k, c.n);
+  for (const e of world.ents.values())
+    if (e.build && e.build.need)
+      for (const k in e.build.need)
+        want(k, e.build.need[k] - ((e.build.have && e.build.have[k]) || 0));
   for (const t of ANIMAL_TYPES) {
     const n = countOf(t);
     if (n) want(BUILD[t].feed, n * (BUILD[t].slots || 3) * 2);
@@ -412,7 +416,12 @@ function autoRecipe(e) {
     const have = S.inv[out] || 0,
       target = Math.max(
         need[out] || 0,
-        ITEMS[out] && ITEMS[out].kind === "feed" ? 0 : 6,
+        ITEMS[out] && ITEMS[out].kind === "feed"
+          ? 0
+          : ITEMS[out] &&
+              (ITEMS[out].kind === "material" || ITEMS[out].kind === "tool")
+            ? 40
+            : 6,
       );
     const gap = target - have;
     if (gap > bestGap) {

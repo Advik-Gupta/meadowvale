@@ -35,8 +35,9 @@ import content_world_catalog from './content/world-catalog.js?raw';
 import gameplay_fleet from './gameplay/fleet.js?raw';
 import gameplay_automation from './gameplay/automation.js?raw';
 import ui_title from './ui/title.js?raw';
+import gameplay_operations from './gameplay/operations.js?raw';
 import render_art_seasonal from './render/art-seasonal.js?raw';
 
-export const GAME_FILES = [core_constants, content_catalog, core_util, world_worldgen, core_audio, world_world, render_renderer, render_terrain, simulation_walkers, gameplay_animals, render_art_farm, render_art_generic, gameplay_courier, gameplay_workforce, render_ambient_life, gameplay_systems, content_catalog_town, content_catalog_expansion, gameplay_economy, gameplay_logistics, gameplay_progression, render_art_special, ui_interface, game, gameplay_features, gameplay_professions, content_society_data, simulation_society, simulation_traffic, ui_census, content_cultures_military, simulation_transit, gameplay_cities, content_world_catalog, gameplay_fleet, gameplay_automation, ui_title, render_art_seasonal];
+export const GAME_FILES = [core_constants, content_catalog, core_util, world_worldgen, core_audio, world_world, render_renderer, render_terrain, simulation_walkers, gameplay_animals, render_art_farm, render_art_generic, gameplay_courier, gameplay_workforce, render_ambient_life, gameplay_systems, content_catalog_town, content_catalog_expansion, gameplay_economy, gameplay_logistics, gameplay_progression, render_art_special, ui_interface, game, gameplay_features, gameplay_professions, content_society_data, simulation_society, simulation_traffic, ui_census, content_cultures_military, simulation_transit, gameplay_cities, content_world_catalog, gameplay_fleet, gameplay_automation, ui_title, gameplay_operations, render_art_seasonal];
 
 (0, eval)(GAME_FILES.join('\n;\n'));

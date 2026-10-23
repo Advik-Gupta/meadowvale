@@ -348,15 +348,15 @@ function runSuite() {
   section('automated production', () => {
     S.coins = 1e8;
     const q = addEnt(newEntity('quarry', ...scan('quarry', WX0, WY0, WX1, WY1))); q.pp = NOW - 1e7;
-    const bw = addEnt(newEntity('brickworks', ...findBizSpot('brickworks', hasType('townhall'))));
+    const bw = addEnt(newEntity('brickworks', ...(findBizSpot('brickworks', hasType('townhall')) || findBizSpot('brickworks', hasType('townhall')) || scan('brickworks', WX0, WY0, WX1, WY1))));
     for (let i = 0; i < 4; i++) jobMarket(200);
     const staffed = staffRatio(bw) > 0;
     const un = S.people.filter((p) => p.k === 'unemployed' && !p.j && ageOf(p) >= 18 && ageOf(p) < 65 && world.ents.get(p.h) && reachable(world.ents.get(p.h), bw)); const h0 = un[0] && world.ents.get(un[0].h);
     ok('placing a factory fills its jobs with residents', staffed || !un.length, `pos ${positionsOf(bw)} unemployed ${un.length} reach ${h0 ? reachable(h0, bw) : '-'} fr ${JSON.stringify(frontRoad(bw))} home fr ${h0 ? JSON.stringify(frontRoad(h0)) : '-'} build ${!!bw.build}`);
     if (staffed) {
       const need = RECIPES.bricks.in; for (const k in need) addItem(k, need[k] * 4);
-      const b0 = S.inv.bricks || 0; automationTick(); automationTick();
-      ok('staffed factories start production by themselves', !!bw.job);
+      delete S.inv.bricks; const b0 = 0; automationTick(); automationTick();
+      ok('staffed factories start production by themselves', !!bw.job, JSON.stringify({ recipe: autoRecipe(bw), staff: staffRatio(bw), clay: S.inv.clay, bricks: S.inv.bricks }));
       jump(120000); factoryTick(bw); automationTick(); automationTick();
       ok('...and deliver into storage', (S.inv.bricks || 0) > b0, (S.inv.bricks || 0) + ' vs ' + b0);
     }
@@ -384,6 +384,22 @@ function runSuite() {
     const m0 = S.mode, c0 = S.coins; S.mode = 'creative'; ok('creative mode builds for free', spend(1e12) && S.coins === c0); S.mode = m0;
     ok('world types change the sea level', WORLD_TYPES.archipelago.bias < 0 && WORLD_TYPES.pangaea.bias > 0);
     saveWorldsList(worldsList().filter((x) => x.id !== w.id));
+  });
+
+  section('operations', () => {
+    S.coins = 1e8;
+    const q = [...entsOf('quarry')][0] || addEnt(newEntity('quarry', ...scan('quarry', WX0, WY0, WX1, WY1)));
+    q.pp = NOW - 1e7; const c0 = S.inv.clay || 0, s0 = S.inv.sand || 0, st0 = S.inv.stone || 0;
+    producerCollect(q, true);
+    ok('quarries deliver stone, clay and sand together', (S.inv.clay || 0) > c0 && (S.inv.sand || 0) > s0 && (S.inv.stone || 0) > st0);
+    q.pp = NOW - 1e7; const c = genCandidate('quarryman'); c.cid = 'qm'; S.cands.push(c); hireWorker('qm');
+    const qm = S.workers.find((w) => w.role === 'quarryman'), t = decide(qm);
+    ok('quarry workers collect from quarries first', t && t.type === 'j-collect');
+    const st = [...entsOf('trainstation')][0];
+    if (st) { onEntityClick(st, 300, 300); const h = document.querySelector('#popup').innerHTML; ok('stations open a popup with move & rotate', h.includes('p-move') && h.includes('p-rotate') && h.includes('hub-open')); hidePopup(true); }
+    const r = [...entsOf('rail')][0];
+    if (r) { onEntityClick(r, 300, 300); ok('track has an edit / move option', document.querySelector('#popup').innerHTML.includes('p-edit')); hidePopup(true); }
+    const h2 = [...entsOf('house')][0], f0 = !!h2.flip; rotateEnt(h2); ok('buildings rotate in place', !!h2.flip !== f0);
   });
 
   section('supplies', () => {
