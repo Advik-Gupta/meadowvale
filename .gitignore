@@ -1,0 +1,5 @@
+node_modules/
+dist/
+tests/runner.html
+tests/balance.html
+.DS_Store

@@ -1,0 +1,24 @@
+{
+  "name": "meadowvale",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Meadowvale - an endless, seeded city-building sandbox in the browser: farms, towns, cities, economies and living residents.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "bash tests/run.sh",
+    "balance": "bash tests/run.sh balance"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0"
+  },
+  "keywords": [
+    "city-builder",
+    "game",
+    "isometric",
+    "canvas",
+    "procedural-generation"
+  ]
+}

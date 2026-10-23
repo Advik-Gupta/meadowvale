@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Meadowvale - Farm & Town Builder</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles/main.css" />
+    <script>
+      window.addEventListener("error", function (e) {
+        var el = document.getElementById("err");
+        if (el) {
+          el.classList.remove("hidden");
+          el.textContent =
+            "Error: " +
+            e.message +
+            " (" +
+            (e.filename || "").split("/").pop() +
+            ":" +
+            e.lineno +
+            ")";
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <div id="hud-top">
+      <div class="hud-level" title="Level & experience">
+        <div class="lvl-badge"><span id="hud-level">1</span></div>
+        <div class="xpbar">
+          <div id="xpfill"></div>
+          <span id="hud-xp">0 / 20 XP</span>
+        </div>
+      </div>
+      <div class="pill" id="pill-coins" title="Coins">
+        <span class="ic">🪙</span><span id="hud-coins">0</span>
+      </div>
+      <div class="pill" id="pill-gems" title="Gems (premium, earned in-game)">
+        <span class="ic">💎</span><span id="hud-gems">0</span>
+      </div>
+      <div
+        class="pill clickable"
+        id="pill-pop"
+        data-act="open"
+        data-id="census"
+        title="Residents - open the Census (N)"
+      >
+        <span class="ic">👥</span><span id="hud-pop">0</span>
+      </div>
+      <div
+        class="pill clickable"
+        id="pill-hap"
+        data-act="open"
+        data-id="city"
+        title="Town happiness"
+      >
+        <span class="ic">😊</span><span id="hud-hap">50%</span>
+      </div>
+      <div
+        class="pill clickable"
+        id="pill-barn"
+        data-act="open"
+        data-id="inventory"
+        title="Barn storage"
+      >
+        <span class="ic">📦</span><span id="hud-barn">0/60</span>
+      </div>
+      <div
+        class="pill clickable hidden"
+        id="pill-silo"
+        data-act="open"
+        data-id="inventory"
+        title="Grain silos (crops)"
+      >
+        <span class="ic">🛢️</span><span id="hud-silo">0/0</span>
+      </div>
+    </div>
+    <div id="hud-right">
+      <div class="round-btn clock" id="clock" title="Time of day">☀️</div>
+      <button
+        class="round-btn"
+        data-act="speed"
+        id="btn-speed"
+        title="Game speed (F)"
+      >
+        1×
+      </button>
+      <button
+        class="round-btn"
+        data-act="pause"
+        id="btn-pause"
+        title="Pause (P / Space)"
+      >
+        ⏸️
+      </button>
+      <button
+        class="round-btn"
+        data-act="clearmode"
+        id="btn-clear"
+        title="Clear an area: drag over land to remove trees, rocks & bushes (X)"
+      >
+        🪓
+      </button>
+      <button
+        class="round-btn"
+        data-act="edit"
+        id="btn-edit"
+        title="Edit mode: select, move, copy, store, flip (V)"
+      >
+        ✏️
+      </button>
+      <button
+        class="round-btn"
+        data-act="bell"
+        id="btn-bell"
+        title="News & notifications"
+      >
+        🔔<span class="badge hidden" id="badge-bell"></span>
+      </button>
+      <button
+        class="round-btn"
+        data-act="toggle-sound"
+        id="btn-sound"
+        title="Sound on/off"
+      >
+        🔊
+      </button>
+      <button
+        class="round-btn"
+        data-act="open"
+        data-id="settings"
+        title="Settings & help"
+      >
+        ⚙️
+      </button>
+    </div>
+
+    <div id="boost-bar"></div>
+    <div id="mode-banner" class="hidden"></div>
+    <div id="quest" class="hidden"></div>
+    <div id="toolbar">
+      <button
+        class="tool"
+        id="btn-store"
+        data-act="open"
+        data-id="store"
+        title="Store (B)"
+      >
+        <span class="ti">🏪</span><span>Store</span>
+      </button>
+      <button
+        class="tool"
+        id="btn-inventory"
+        data-act="open"
+        data-id="inventory"
+        title="Barn (I)"
+      >
+        <span class="ti">🎒</span><span>Barn</span>
+      </button>
+      <button
+        class="tool"
+        id="btn-orders"
+        data-act="open"
+        data-id="orders"
+        title="Orders (O)"
+      >
+        <span class="ti">🧾</span><span>Orders</span
+        ><span class="badge hidden" id="badge-orders"></span>
+      </button>
+      <button
+        class="tool"
+        id="btn-staff"
+        data-act="open"
+        data-id="staff"
+        title="Staff (J)"
+      >
+        <span class="ti">👷</span><span>Staff</span
+        ><span class="badge hidden" id="badge-staff"></span>
+      </button>
+      <button
+        class="tool"
+        id="btn-transport"
+        data-act="open"
+        data-id="transport"
+        title="Transport (T)"
+      >
+        <span class="ti">🚂</span><span>Transport</span>
+      </button>
+      <button
+        class="tool"
+        id="btn-city"
+        data-act="open"
+        data-id="city"
+        title="City dashboard (C)"
+      >
+        <span class="ti">🏙️</span><span>City</span>
+      </button>
+      <button
+        class="tool"
+        id="btn-census"
+        data-act="open"
+        data-id="census"
+        title="Census: people, jobs, businesses, budget (N)"
+      >
+        <span class="ti">👥</span><span>Census</span
+        ><span class="badge hidden" id="badge-census"></span>
+      </button>
+      <button
+        class="tool"
+        id="btn-events"
+        data-act="open"
+        data-id="events"
+        title="Events & rewards (E)"
+      >
+        <span class="ti">🎁</span><span>Events</span>
+      </button>
+      <button
+        class="tool"
+        id="btn-ach"
+        data-act="open"
+        data-id="achievements"
+        title="Achievements (G)"
+      >
+        <span class="ti">🏆</span><span>Goals</span
+        ><span class="badge hidden" id="badge-ach"></span>
+      </button>
+      <button class="tool" id="btn-home" data-act="home" title="Go to farm (H)">
+        <span class="ti">🏡</span><span>Home</span>
+      </button>
+    </div>
+
+    <div id="minimap-wrap">
+      <div class="mm-title">
+        🗺️ Nearby
+        <button
+          class="mm-open"
+          data-act="open"
+          data-id="worldmap"
+          title="Open the world map (M)"
+        >
+          World map ⤢
+        </button>
+      </div>
+      <canvas id="minimap"></canvas>
+    </div>
+
+    <div id="popup" class="hidden"></div>
+    <div id="pause-root" class="hidden">
+      <div class="pause-card">
+        <div class="pause-ic">⏸️</div>
+        <div class="pause-title">Paused</div>
+        <div class="pause-sub">
+          Time has stopped in Meadowvale - crops, factories, animals, rent,
+          customers and staff are all frozen.
+        </div>
+        <button class="btn green big" data-act="resume">▶ Resume</button>
+        <div class="pause-row">
+          <button class="btn blue" data-act="open" data-id="settings">
+            ⚙️ Settings</button
+          ><button class="btn orange" data-act="save-now">💾 Save</button>
+        </div>
+        <div class="pause-hint">
+          Press <kbd>P</kbd> or <kbd>Space</kbd> to resume
+        </div>
+      </div>
+    </div>
+    <div id="modal-root"></div>
+    <div id="dialog-root"></div>
+    <div id="levelup-root"></div>
+    <div id="toasts"></div>
+    <div id="cursor-icon" class="hidden"></div>
+    <div id="err" class="hidden"></div>
+
+    <div id="loading">
+      <div class="ld-logo">🌾</div>
+      <div class="ld-title">Meadowvale</div>
+      <div class="ld-sub">Growing your world…</div>
+    </div>
+    <script src="src/core/constants.js"></script>
+    <script src="src/content/catalog.js"></script>
+    <script src="src/core/util.js"></script>
+    <script src="src/world/worldgen.js"></script>
+    <script src="src/core/audio.js"></script>
+    <script src="src/world/world.js"></script>
+    <script src="src/render/renderer.js"></script>
+    <script src="src/render/terrain.js"></script>
+    <script src="src/simulation/walkers.js"></script>
+    <script src="src/gameplay/animals.js"></script>
+    <script src="src/render/art-farm.js"></script>
+    <script src="src/render/art-generic.js"></script>
+    <script src="src/gameplay/courier.js"></script>
+    <script src="src/gameplay/workforce.js"></script>
+    <script src="src/render/ambient-life.js"></script>
+    <script src="src/gameplay/systems.js"></script>
+    <script src="src/content/catalog-town.js"></script>
+    <script src="src/content/catalog-expansion.js"></script>
+    <script src="src/gameplay/economy.js"></script>
+    <script src="src/gameplay/logistics.js"></script>
+    <script src="src/gameplay/progression.js"></script>
+    <script src="src/render/art-special.js"></script>
+    <script src="src/ui/interface.js"></script>
+    <script src="src/game.js"></script>
+    <script src="src/gameplay/features.js"></script>
+    <script src="src/gameplay/professions.js"></script>
+    <script src="src/content/society-data.js"></script>
+    <script src="src/simulation/society.js"></script>
+    <script src="src/simulation/traffic.js"></script>
+    <script src="src/ui/census.js"></script>
+    <script src="src/content/cultures-military.js"></script>
+    <script src="src/simulation/transit.js"></script>
+    <script src="src/gameplay/cities.js"></script>
+    <script src="src/content/world-catalog.js"></script>
+    <script src="src/gameplay/fleet.js"></script>
+    <script src="src/gameplay/automation.js"></script>
+    <script src="src/ui/title.js"></script>
+    <script src="src/render/art-seasonal.js"></script>
+  </body>
+</html>
