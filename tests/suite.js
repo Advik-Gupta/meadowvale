@@ -402,6 +402,12 @@ function runSuite() {
     const h2 = [...entsOf('house')][0], f0 = !!h2.flip; rotateEnt(h2); ok('buildings rotate in place', !!h2.flip !== f0);
   });
 
+  section('dialogs', () => {
+    const c = (S.cities || [])[0];
+    if (c) { renameCity(c.id); document.getElementById('city-name').value = 'Testopolis'; ACT['dlg-yes'](); ok('dialog inputs are read before closing', c.name === 'Testopolis' && !dialogOpen()); }
+    dialog({ title: 'a', body: '', onYes: () => dialog({ title: 'b', body: 'second' }) }); ACT['dlg-yes'](); ok('a dialog opened from Yes stays open', dialogOpen() && $('#dialog-root').innerHTML.includes('second')); closeDialog();
+  });
+
   section('supplies', () => {
     const c0 = S.coins, b0 = S.inv.bricks || 0; buyMaterial('bricks', 5); ok('buy bricks in Supplies', (S.inv.bricks || 0) === b0 + 5 && S.coins === c0 - supplyPrice('bricks') * 5);
     const site = put('school', ...scan('school', WX0, WY0, WX1, WY1)); for (const k in site.build.need) delete S.inv[k];

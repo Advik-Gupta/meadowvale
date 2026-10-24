@@ -5,8 +5,14 @@ let client;
 export const db = {};
 
 export async function connectDb(uri = config.mongoUri, name = config.mongoDb) {
-  client = new MongoClient(uri);
-  await client.connect();
+  const c = new MongoClient(uri, { serverSelectionTimeoutMS: 15000 });
+  try {
+    await c.connect();
+  } catch (e) {
+    await c.close().catch(() => {});
+    throw e;
+  }
+  client = c;
   const d = client.db(name);
   db.users = d.collection("users");
   db.worlds = d.collection("worlds");

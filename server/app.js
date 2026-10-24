@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import express from "express";
 import { config } from "./config.js";
+import { db } from "./db.js";
 import authRoutes from "./routes/auth.js";
 import friendRoutes from "./routes/friends.js";
 import worldRoutes from "./routes/worlds.js";
@@ -28,7 +29,8 @@ export function createApp() {
       next();
     });
   }
-  app.get("/api/health", (req, res) => res.json({ ok: true }));
+  app.get("/api/health", (req, res) => res.status(db.users ? 200 : 503).json({ ok: !!db.users, db: db.users ? "connected" : "connecting" }));
+  app.use("/api", (req, res, next) => (db.users ? next() : res.status(503).json({ error: "The server is starting up - try again in a moment." })));
   app.use("/api/auth", authRoutes);
   app.use("/api/friends", friendRoutes);
   app.use("/api/worlds", worldRoutes);

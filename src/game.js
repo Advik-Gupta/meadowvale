@@ -1873,9 +1873,15 @@ const ACT = {
     );
   },
   "dlg-yes": () => {
-    const cb = dlgCb;
-    closeDialog();
-    if (cb) cb();
+    const cb = dlgCb,
+      root = $("#dialog-root"),
+      shown = root.firstElementChild;
+    dlgCb = null;
+    try {
+      if (cb) cb();
+    } finally {
+      if (root.firstElementChild === shown) closeDialog();
+    }
   },
   "dlg-no": () => {
     const f = dlgNo;

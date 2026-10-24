@@ -174,7 +174,7 @@ function netConnect() {
       netMessage(m);
     };
     ws.onclose = (ev) => {
-      if (!hello) reject(new Error(ev.code === 4001 ? "Your login has expired - please log in again." : "Can't reach the live server."));
+      if (!hello) reject(new Error(ev.code === 4001 ? "Your login has expired - please log in again." : ev.code === 1013 ? "The server is starting up - try again in a moment." : "Can't reach the live server."));
       if (NET.ws === ws) netDisconnected();
     };
     ws.onerror = () => {};

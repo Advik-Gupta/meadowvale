@@ -1,5 +1,6 @@
 import { WebSocketServer } from "ws";
 import { userFromToken } from "./auth.js";
+import { db } from "./db.js";
 import { canPlay, canSpectate, loadWorld, storeSave } from "./worlds.js";
 
 const rooms = new Map();
@@ -128,6 +129,7 @@ async function handle(c, msg) {
 export function attachRealtime(server) {
   const wss = new WebSocketServer({ server, path: "/ws", maxPayload: 64 * 1024 * 1024 });
   wss.on("connection", async (ws, req) => {
+    if (!db.users) return ws.close(1013, "starting");
     const token = new URL(req.url, "http://x").searchParams.get("token");
     const user = await userFromToken(token).catch(() => null);
     if (!user) return ws.close(4001, "unauthorized");
