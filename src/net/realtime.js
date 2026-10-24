@@ -261,9 +261,13 @@ function netHandle(m) {
     case "presence":
       netPresence(m.users || []);
       return;
-    case "cursor":
-      NET.cursors.set(m.id, { name: m.name, color: m.color, x: m.x, y: m.y, m: m.m, at: Date.now() });
+    case "cursor": {
+      const key = m.uid || m.id;
+      const c = NET.cursors.get(key) || {};
+      Object.assign(c, { conn: m.id, name: m.name, color: m.color, x: m.x, y: m.y, m: m.m, at: Date.now() });
+      NET.cursors.set(key, c);
       return;
+    }
     case "chat":
       netChatAdd(m);
       return;
@@ -888,14 +892,22 @@ function netCloudSave(force, text) {
 
 function netPresence(users) {
   const before = new Set(NET.users.map((u) => u.id));
+  const beforeUid = new Set(NET.users.map((u) => u.uid).filter(Boolean));
   const now = new Set(users.map((u) => u.id));
   if (NET.booted) {
-    for (const u of users) if (!before.has(u.id) && u.id !== NET.connId) toast(`${u.role === "spectator" ? "👀" : "🎮"} <b>${esc(u.name)}</b> joined${u.role === "spectator" ? " to watch" : ""}`, "info");
-    for (const u of NET.users) if (!now.has(u.id)) {
-      toast(`👋 <b>${esc(u.name)}</b> left`, "info");
-      NET.cursors.delete(u.id);
-    }
+    for (const u of users) if (!before.has(u.id) && !(u.uid && beforeUid.has(u.uid)) && u.id !== NET.connId) toast(`${u.role === "spectator" ? "👀" : "🎮"} <b>${esc(u.name)}</b> joined${u.role === "spectator" ? " to watch" : ""}`, "info");
+    for (const u of NET.users) if (!now.has(u.id) && !users.some((x) => x.uid && x.uid === u.uid)) toast(`👋 <b>${esc(u.name)}</b> left`, "info");
   }
+  const live = new Set();
+  for (const u of users) {
+    live.add(u.id);
+    if (u.uid) live.add(u.uid);
+  }
+  for (const [key, c] of NET.cursors)
+    if (!live.has(key)) {
+      if (c.el) c.el.remove();
+      NET.cursors.delete(key);
+    }
   NET.users = users;
   netRenderBar();
 }

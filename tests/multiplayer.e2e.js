@@ -181,10 +181,19 @@ try {
   await step("cursors are shared", async () => {
     await B.eval(`hoverTile = [${spot[0] + 3}, ${spot[1] + 3}]; NET.lastCursor = 0; netSendCursor(); true`);
     await A.until(`[...NET.cursors.values()].some((c) => c.name === "GuestGabe")`, 5000, "guest cursor on host");
+    for (let i = 1; i <= 6; i++) {
+      await B.eval(`hoverTile = [${spot[0] + i}, ${spot[1] + 3}]; NET.lastCursor = 0; netSendCursor(); true`);
+      await sleep(150);
+    }
+    await sleep(400);
+    assert.equal(await A.eval(`document.querySelectorAll("#mp-cursors .mp-cursor").length`), 1, "one label per player");
   });
   await step("guest reconnects after the connection drops", async () => {
     await B.eval(`NET.ws.close(); true`);
     await B.until(`NET.ws && NET.ws.readyState === 1 && NET.role === "guest"`, 15000, "guest reconnected");
+    await B.eval(`hoverTile = [${spot[0]}, ${spot[1] + 6}]; NET.lastCursor = 0; netSendCursor(); true`);
+    await sleep(600);
+    assert.equal(await A.eval(`document.querySelectorAll("#mp-cursors .mp-cursor").length`), 1, "no leftover cursor after reconnect");
     await B.eval(`startPlace('road'); hoverTile = [${spot[0] + 4}, ${spot[1]}]; tryPlace(); cancelMode(true); true`);
     await A.until(`entAt(${spot[0] + 4}, ${spot[1]}) && entAt(${spot[0] + 4}, ${spot[1]}).t === 'road'`, 8000, "road after reconnect");
   });

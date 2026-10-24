@@ -37,7 +37,7 @@ function broadcast(room, msg, except) {
   for (const c of room.conns) if (c !== except) send(c, text);
 }
 function presence(room) {
-  broadcast(room, { t: "presence", users: [...room.conns].map((c) => ({ id: c.id, name: c.name, color: c.color, role: c.role, host: room.host === c })) });
+  broadcast(room, { t: "presence", users: [...room.conns].map((c) => ({ id: c.id, uid: c.userId, name: c.name, color: c.color, role: c.role, host: room.host === c })) });
 }
 function pickHost(room) {
   room.host = [...room.conns].find((c) => c.role === "player") || null;
@@ -60,6 +60,13 @@ async function join(c, msg) {
   leave(c);
   const id = String(w._id);
   let room = rooms.get(id);
+  if (room)
+    for (const old of [...room.conns])
+      if (old.userId === c.userId) {
+        send(old, { t: "kicked", reason: "You opened this world in another tab or device." });
+        leave(old);
+      }
+  room = rooms.get(id);
   if (!room) rooms.set(id, (room = { id, name: w.name, conns: new Set(), host: null, lastSave: 0 }));
   c.world = id;
   c.role = wantPlay ? "player" : "spectator";
@@ -105,7 +112,7 @@ async function handle(c, msg) {
       return;
     }
     case "cursor":
-      broadcast(room, { t: "cursor", id: c.id, name: c.name, color: c.color, x: +msg.x || 0, y: +msg.y || 0, m: String(msg.m || "").slice(0, 48) }, c);
+      broadcast(room, { t: "cursor", id: c.id, uid: c.userId, name: c.name, color: c.color, x: +msg.x || 0, y: +msg.y || 0, m: String(msg.m || "").slice(0, 48) }, c);
       return;
     case "chat": {
       const text = String(msg.text || "").trim().slice(0, 240);
