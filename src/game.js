@@ -2417,7 +2417,7 @@ function newGame(seedText, opts) {
 
 let lastT = performance.now();
 function loop(t) {
-  const realDT = Math.min(0.05, (t - lastT) / 1000);
+  const realDT = Math.max(0, Math.min(0.05, (t - lastT) / 1000));
   lastT = t;
   advanceClock();
   DT = clock.paused ? 0 : realDT * clock.speed;

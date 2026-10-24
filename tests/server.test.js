@@ -91,6 +91,13 @@ test("friends, shared worlds, saves, spectating, leaderboard and live play", asy
   await api("/api/friends/accept", { token: cara.token, method: "POST", body: { userId: bob.user.id } });
   await api("/api/friends/request", { token: dan.token, method: "POST", body: { username: "Bob" } });
   await api("/api/friends/accept", { token: bob.token, method: "POST", body: { userId: dan.user.id } });
+  await api("/api/auth/ping", { token: dan.token, method: "POST" });
+  const seenByBob = (await api("/api/friends", { token: bob.token })).data.friends.find((f) => f.username === "Dan");
+  assert.equal(seenByBob.online, true, "a player on the menu counts as online");
+  assert.ok(seenByBob.lastSeen > Date.now() - 60000);
+  const d1 = await api("/api/worlds", { token: dan.token, method: "POST", body: { name: "Twice" } });
+  const d2 = await api("/api/worlds", { token: dan.token, method: "POST", body: { name: "Twice" } });
+  assert.equal(d1.data.world.id, d2.data.world.id, "a double-clicked create makes one world");
   const bobF = await api("/api/friends", { token: bob.token });
   assert.deepEqual(bobF.data.friends.map((f) => f.username).sort(), ["Cara", "Dan"]);
 

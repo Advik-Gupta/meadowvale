@@ -43,6 +43,10 @@ router.post("/", async (req, res) => {
     type: ["normal", "archipelago", "pangaea", "islands"].includes(b.type) ? b.type : "normal",
     members, stats: cleanStats(b.stats), version: 0, saveSize: 0, createdAt: new Date(), updatedAt: new Date(),
   };
+  if (!(typeof b.save === "string" && b.save.length)) {
+    const dup = await db.worlds.findOne({ owner: req.user._id, name, saveSize: 0, createdAt: { $gt: new Date(Date.now() - 60000) } }, { projection: META });
+    if (dup) return res.json({ world: (await describe([dup]))[0] });
+  }
   const r = await db.worlds.insertOne(w);
   w._id = r.insertedId;
   if (typeof b.save === "string" && b.save.length) await storeSave(w._id, b.save, b.stats);

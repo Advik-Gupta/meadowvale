@@ -29,6 +29,8 @@ export async function closeDb() {
   if (client) await client.close();
 }
 
+db.oid = (id) => oid(id);
+
 export function oid(id) {
   try {
     return new ObjectId(String(id));

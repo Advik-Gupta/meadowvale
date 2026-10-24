@@ -89,6 +89,7 @@ async function accStartCloud(kind, id) {
 }
 async function bootAccount() {
   netInstall();
+  setTimeout(accHeartbeat, 2000);
   window.addEventListener("beforeunload", accBeforeUnload);
   let play = "";
   try {
@@ -236,7 +237,7 @@ function accBody() {
     const f = ACC.friends,
       sr = ACC.search.users;
     const status = (u) =>
-      u.playing ? `<small class="acc-on">🟢 ${u.playing.role === "spectator" ? "watching" : "playing"} ${esc(u.playing.name)}</small>` : u.online ? '<small class="acc-on">🟢 online</small>' : '<small class="acc-off">offline</small>';
+      u.playing ? `<small class="acc-on">🟢 ${u.playing.role === "spectator" ? "watching" : "playing"} ${esc(u.playing.name)}</small>` : u.online ? '<small class="acc-on">🟢 online</small>' : `<small class="acc-off">${accSeen(u.lastSeen)}</small>`;
     const rel = (u) =>
       u.relation === "friend"
         ? '<span class="acc-tag">Friends ✓</span>'
@@ -328,7 +329,10 @@ renderTitle = function () {
 async function accLoad(view) {
   ACC.err = "";
   try {
-    if (view === "cloud") ACC.cloud = await API.get("/worlds");
+    if (view === "cloud" || view === "worlds") {
+      ACC.cloud = await API.get("/worlds");
+      accAutoLink();
+    }
     if (view === "friends" || view === "home" || view === "create" || view === "leaders") {
       if (API.loggedIn) ACC.friends = await API.get("/friends");
     }
@@ -379,10 +383,12 @@ const _tCreateAcc = ACT["t-create"];
 Object.assign(ACT, {
   "t-view": (d) => {
     _tViewAcc(d);
-    if (d.v === "home" || d.v === "create") accLoad(d.v);
+    if (d.v === "home" || d.v === "create" || (d.v === "worlds" && API.loggedIn)) accLoad(d.v);
   },
   "t-create": () => {
     if (!(API.loggedIn && ACC.createOnline)) return _tCreateAcc();
+    if (ACC.creating) return;
+    ACC.creating = true;
     readTitleForm();
     accDo(async () => {
       const r = await API.post("/worlds", {
@@ -393,7 +399,7 @@ Object.assign(ACT, {
         members: [...ACC.invite],
       });
       accPlay("cloud", r.world.id);
-    });
+    }).then(() => setTimeout(() => (ACC.creating = false), 3000));
   },
   "a-view": (d) => accGo(d.v),
   "a-authmode": (d) => {
@@ -500,7 +506,16 @@ Object.assign(ACT, {
       yes: "Rename",
       onYes: () => {
         const v = document.getElementById("acc-rename").value.trim();
-        if (v) accDo(() => API.patch("/worlds/" + d.id, { name: v }), "cloud");
+        if (v)
+          accDo(async () => {
+            await API.patch("/worlds/" + d.id, { name: v });
+            const list = worldsList(),
+              local = list.find((x) => x.cloudId === d.id);
+            if (local) {
+              local.name = v;
+              _saveWorldsListAcc(list);
+            }
+          }, "cloud");
       },
     });
   },
@@ -576,29 +591,42 @@ Object.assign(ACT, {
       toast("That world hasn't been saved yet - play it for a moment first.", "warn");
       return;
     }
+    const update = !!w.cloudId;
     dialog({
-      title: "☁️ Upload to your account?",
-      body: `<b>${esc(w.name)}</b> will be copied to your account as an online world. The copy in this browser stays too.`,
-      yes: "Upload",
+      title: update ? "☁️ Update the online copy?" : "☁️ Upload to your account?",
+      body: update
+        ? `This world is already in your account. Its online copy will be replaced with this browser's version of <b>${esc(w.name)}</b>.`
+        : `<b>${esc(w.name)}</b> will be copied to your account as an online world. The copy in this browser stays too, and renaming either one renames both.`,
+      yes: update ? "Update" : "Upload",
       onYes: () =>
         accDo(async () => {
-          toast("☁️ Uploading…", "info");
-          const sv = JSON.parse(raw);
-          await API.post("/worlds", {
-            name: w.name,
-            seed: w.seed,
-            mode: w.mode,
-            type: w.type,
-            save: raw,
-            stats: {
+          if (ACC.uploading) return;
+          ACC.uploading = true;
+          try {
+            toast("☁️ Uploading…", "info");
+            const sv = JSON.parse(raw);
+            const stats = {
               level: sv.S.level,
               coins: Math.floor(sv.S.coins || 0),
               pop: (sv.S.people || []).length || w.pop || 0,
               cities: (sv.S.cities || []).length,
               buildings: (sv.ents || []).length,
-            },
-          });
-          toast(`☁️ <b>${esc(w.name)}</b> is now in 🌐 Online Worlds!`, "good");
+            };
+            let done = false;
+            if (update)
+              try {
+                await API.put(`/worlds/${w.cloudId}/save`, { save: raw, stats });
+                await API.patch("/worlds/" + w.cloudId, { name: w.name });
+                done = true;
+              } catch (e) {}
+            if (!done) {
+              const r = await API.post("/worlds", { name: w.name, seed: w.seed, mode: w.mode, type: w.type, save: raw, stats });
+              accLinkLocal(w.id, r.world.id);
+            }
+            toast(`☁️ <b>${esc(w.name)}</b> is ${update && done ? "updated" : "now"} in 🌐 Online Worlds!`, "good");
+          } finally {
+            ACC.uploading = false;
+          }
         }),
     });
   },
@@ -607,6 +635,59 @@ Object.assign(ACT, {
   },
   "mp-invite": () => accInviteDialog(),
 });
+
+function accLinkLocal(localId, cloudId) {
+  const list = worldsList(),
+    w = list.find((x) => x.id === localId);
+  if (!w) return;
+  w.cloudId = cloudId;
+  _saveWorldsListAcc(list);
+}
+const _saveWorldsListAcc = saveWorldsList;
+saveWorldsList = function (list) {
+  let prev = [];
+  try {
+    prev = JSON.parse(localStorage.getItem(WORLDS_KEY) || "[]");
+  } catch (e) {}
+  _saveWorldsListAcc(list);
+  if (!API.loggedIn) return;
+  for (const w of list) {
+    const p = prev.find((x) => x.id === w.id);
+    if (w.cloudId && p && p.name !== w.name) API.patch("/worlds/" + w.cloudId, { name: w.name }).catch(() => {});
+  }
+};
+function accAutoLink() {
+  if (!ACC.cloud) return;
+  const list = worldsList();
+  let changed = false;
+  for (const w of list) {
+    if (w.cloudId) continue;
+    const same = ACC.cloud.mine.filter((c) => c.seed === String(w.seed) && c.mode === (w.mode || "career") && c.hasSave);
+    if (same.length !== 1 || list.some((x) => x.cloudId === same[0].id)) continue;
+    w.cloudId = same[0].id;
+    changed = true;
+    if (same[0].name !== w.name) {
+      API.patch("/worlds/" + same[0].id, { name: w.name }).catch(() => {});
+      same[0].name = w.name;
+    }
+  }
+  if (changed) _saveWorldsListAcc(list);
+}
+function accHeartbeat() {
+  if (!API.loggedIn || document.hidden) return;
+  API.post("/auth/ping").catch(() => {});
+}
+setInterval(accHeartbeat, 45000);
+document.addEventListener("visibilitychange", accHeartbeat);
+setInterval(() => {
+  if (document.hidden || !API.loggedIn || !document.getElementById("title-root")) return;
+  if (titleView === "friends" || titleView === "cloud") accLoad(titleView);
+}, 20000);
+function accSeen(t) {
+  if (!t) return "offline";
+  const m = Math.round((Date.now() - t) / 60000);
+  return m < 60 ? `seen ${Math.max(1, m)} min ago` : m < 1440 ? `seen ${Math.round(m / 60)} h ago` : `seen ${Math.round(m / 1440)} d ago`;
+}
 
 async function accInviteDialog() {
   if (!NET.world) return;
@@ -636,6 +717,7 @@ const _startTitleAcc = startTitle;
 startTitle = function () {
   if (!API.loggedIn && !accOffline() && API.reachable !== false) titleView = "auth";
   _startTitleAcc();
+  accHeartbeat();
   document.addEventListener("keydown", (ev) => {
     if (ev.key !== "Enter" || !ev.target || !ev.target.id) return;
     if (ev.target.id === "acc-user") document.getElementById("acc-pass").focus();

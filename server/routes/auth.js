@@ -45,5 +45,6 @@ router.post("/login", async (req, res) => {
 });
 
 router.get("/me", requireUser, (req, res) => res.json({ user: publicUser(req.user) }));
+router.post("/ping", requireUser, (req, res) => res.json({ ok: true }));
 
 export default router;

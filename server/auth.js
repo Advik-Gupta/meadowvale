@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { config } from "./config.js";
+import { touch } from "./presence.js";
 import { db, oid } from "./db.js";
 
 const b64 = (buf) => Buffer.from(buf).toString("base64url");
@@ -46,6 +47,7 @@ export function requireUser(req, res, next) {
     .then((user) => {
       if (!user) return res.status(401).json({ error: "Please log in again." });
       req.user = user;
+      touch(user._id);
       next();
     })
     .catch(next);

@@ -403,7 +403,7 @@ function startTitle() {
   }
   let last = performance.now();
   const frame = (t) => {
-    const dt = Math.min(0.05, (t - last) / 1000);
+    const dt = Math.max(0, Math.min(0.05, (t - last) / 1000));
     last = t;
     T += dt;
     ANIM = T;

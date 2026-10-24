@@ -718,7 +718,7 @@ function drawFountain(e) {
   poly(wp, WATER_SHALLOW[(T * 3 | 0) % 8]);
   const c = P(x + 1, y + 1, 9);
   for (let k = 0; k < 3; k++) {
-    const r = ((T * 0.6 + k / 3) % 1);
+    const r = (((T * 0.6 + k / 3) % 1) + 1) % 1;
     ctx.strokeStyle = `rgba(255,255,255,${0.5 * (1 - r)})`; ctx.lineWidth = 1.2;
     ctx.beginPath(); ctx.ellipse(c[0], c[1], 8 + r * 34, (8 + r * 34) / 2, 0, 0, Math.PI * 2); ctx.stroke();
   }

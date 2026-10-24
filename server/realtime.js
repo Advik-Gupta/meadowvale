@@ -1,6 +1,7 @@
 import { WebSocketServer } from "ws";
 import { userFromToken } from "./auth.js";
 import { db } from "./db.js";
+import { touch, recentlyActive } from "./presence.js";
 import { canPlay, canSpectate, loadWorld, storeSave } from "./worlds.js";
 
 const rooms = new Map();
@@ -9,7 +10,7 @@ const COLORS = ["#e53935", "#1e88e5", "#43a047", "#fb8c00", "#8e24aa", "#00897b"
 let seq = 1;
 
 export function isOnline(userId) {
-  return online.has(userId);
+  return online.has(String(userId)) || recentlyActive(userId);
 }
 export function activeWorldOf(userId) {
   for (const [id, room] of rooms) for (const c of room.conns) if (c.userId === userId) return { id, name: room.name, role: c.role };
@@ -144,7 +145,11 @@ export function attachRealtime(server) {
     ws.conn = c;
     if (!online.has(c.userId)) online.set(c.userId, new Set());
     online.get(c.userId).add(c);
-    ws.on("pong", () => (c.alive = true));
+    touch(c.userId);
+    ws.on("pong", () => {
+      c.alive = true;
+      touch(c.userId);
+    });
     ws.on("message", (raw) => {
       let msg;
       try {

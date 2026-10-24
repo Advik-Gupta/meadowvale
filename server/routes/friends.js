@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db, oid } from "../db.js";
 import { requireUser, publicUser } from "../auth.js";
 import { isOnline, activeWorldOf } from "../realtime.js";
+import { lastSeen } from "../presence.js";
 
 const router = Router();
 router.use(requireUser);
@@ -9,8 +10,8 @@ router.use(requireUser);
 const ids = (list) => (list || []).map(String);
 async function summaries(idList) {
   if (!idList.length) return [];
-  const users = await db.users.find({ _id: { $in: idList.map(oid) } }, { projection: { username: 1 } }).toArray();
-  return users.map((u) => ({ ...publicUser(u), online: isOnline(String(u._id)), playing: activeWorldOf(String(u._id)) }));
+  const users = await db.users.find({ _id: { $in: idList.map(oid) } }, { projection: { username: 1, lastSeen: 1 } }).toArray();
+  return users.map((u) => ({ ...publicUser(u), online: isOnline(String(u._id)), playing: activeWorldOf(String(u._id)), lastSeen: lastSeen(u) }));
 }
 
 router.get("/", async (req, res) => {
