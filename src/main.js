@@ -36,14 +36,16 @@ import gameplay_fleet from './gameplay/fleet.js?raw';
 import gameplay_automation from './gameplay/automation.js?raw';
 import ui_title from './ui/title.js?raw';
 import gameplay_operations from './gameplay/operations.js?raw';
+import gameplay_city_tuning from './gameplay/city-tuning.js?raw';
 import render_art_seasonal from './render/art-seasonal.js?raw';
 import ui_store_families from './ui/store-families.js?raw';
 import ui_mobile from './ui/mobile.js?raw';
+import ui_build_tools from './ui/build-tools.js?raw';
 import net_api from './net/api.js?raw';
 import net_realtime from './net/realtime.js?raw';
 import ui_account from './ui/account.js?raw';
 
-export const GAME_FILES = [core_constants, content_catalog, core_util, world_worldgen, core_audio, world_world, render_renderer, render_terrain, simulation_walkers, gameplay_animals, render_art_farm, render_art_generic, gameplay_courier, gameplay_workforce, render_ambient_life, gameplay_systems, content_catalog_town, content_catalog_expansion, gameplay_economy, gameplay_logistics, gameplay_progression, render_art_special, ui_interface, game, gameplay_features, gameplay_professions, content_society_data, simulation_society, simulation_traffic, ui_census, content_cultures_military, simulation_transit, gameplay_cities, content_world_catalog, gameplay_fleet, gameplay_automation, ui_title, gameplay_operations, render_art_seasonal, ui_store_families, ui_mobile, net_api, net_realtime, ui_account];
+export const GAME_FILES = [core_constants, content_catalog, core_util, world_worldgen, core_audio, world_world, render_renderer, render_terrain, simulation_walkers, gameplay_animals, render_art_farm, render_art_generic, gameplay_courier, gameplay_workforce, render_ambient_life, gameplay_systems, content_catalog_town, content_catalog_expansion, gameplay_economy, gameplay_logistics, gameplay_progression, render_art_special, ui_interface, game, gameplay_features, gameplay_professions, content_society_data, simulation_society, simulation_traffic, ui_census, content_cultures_military, simulation_transit, gameplay_cities, content_world_catalog, gameplay_fleet, gameplay_automation, ui_title, gameplay_operations, gameplay_city_tuning, render_art_seasonal, ui_store_families, ui_mobile, ui_build_tools, net_api, net_realtime, ui_account];
 
 if (import.meta.env.VITE_SERVER_URL) window.MEADOWVALE_SERVER = import.meta.env.VITE_SERVER_URL;
 

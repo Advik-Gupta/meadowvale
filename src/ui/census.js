@@ -588,10 +588,10 @@ function staffHTML(e) {
         "",
       )}${emp.length > 14 ? `<small>+${emp.length - 14}</small>` : ""}${emp.length < pos ? `<small class="openings">${pos - emp.length} opening${pos - emp.length === 1 ? "" : "s"} · ${seekers} qualified applicant${seekers === 1 ? "" : "s"}</small>` : ""}</div>
     ${canSet && isCity(e) ? `<div class="cfg-row"><span>Positions</span><div class="stepper"><button data-act="b-pos" data-d="-1">−</button><b>${pos}</b><button data-act="b-pos" data-d="1">+</button></div><span>Pay</span><div class="seg">${["Low", "Fair", "High"].map((n, i) => `<button class="${b.wageLv === i ? "on" : ""}" data-act="b-wage" data-v="${i}">${n}</button>`).join("")}</div></div>` : ""}
-    ${!fr ? '<div class="pp-warn">🚧 No road next to this building - residents far away can\'t get here.</div>' : ""}
+    ${!fr ? '<div class="pp-note">🚶 No road here - residents within a short walk (48 tiles) still come to work. A road connects it to the whole town.</div>' : ""}
     ${emp.length < pos && s.e ? `<div class="pp-note">🎓 A ${EDU[s.e].toLowerCase()} is an education level, not a building - ${EDU_HOW[s.e]}. Many newcomers already have one.</div>` : ""}
     ${emp.length < pos && seekers ? `<div class="pp-note">⏳ ${seekers} qualified job seeker${seekers === 1 ? "" : "s"} will be hired within the next game hour.</div>` : ""}
-    ${emp.length < pos && blockedByRoad > 0 ? `<div class="pp-warn">🚧 ${blockedByRoad} qualified resident${blockedByRoad === 1 ? "" : "s"} can't get here - connect this building to their street with a road.</div>` : ""}
+    ${emp.length < pos && blockedByRoad > 0 ? `<div class="pp-warn">🚧 ${blockedByRoad} qualified resident${blockedByRoad === 1 ? "" : "s"} live too far away to walk - connect this building to their street with a road.</div>` : ""}
     ${emp.length < pos && !seekers && !blockedByRoad ? `<div class="pp-note">No qualified residents are looking for work${blockedByEdu ? ` (${blockedByEdu} job seeker${blockedByEdu === 1 ? " lacks" : "s lack"} the education)` : ""}. Build more homes to attract workers${s.e ? ", and schools to educate the next generation" : ""}.</div>` : ""}
     ${FACTORY_TYPES.includes(e.t) ? `<div class="pp-note">Want it fully automated? Hire a 👷 Factory Manager on the <a data-act="p-open" data-id="staff">Job Board</a>.</div>` : ""}</div>`;
 }
@@ -624,7 +624,7 @@ function venueHTML(e) {
 }
 function residentsHTML(e) {
   const noRoad = !frontRoad(e)
-    ? '<div class="pp-warn">🚧 No road next to this home - its residents can only work and shop within a short walk. Build a road beside it.</div>'
+    ? '<div class="pp-note">🚶 No road next to this home - its residents walk to places within 48 tiles. A road connects them to the whole town.</div>'
     : "";
   const rs = residentsOf(e);
   if (!rs.length)

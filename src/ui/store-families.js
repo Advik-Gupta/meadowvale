@@ -1,9 +1,10 @@
 const STORE_FAMILIES = {
-  matstore: { icon: "🧱", name: "Material Storage", desc: "Depots and yards for bricks, planks, tools and ores. Pick a size.", members: ["depot", "materialyard", "builderyard", "megadepot"] },
+  matstore: { icon: "🧱", name: "Material Storage", desc: "Depots and yards for bricks, planks, tools and ores. Pick a size.", members: ["depot", "materialyard", "builderyard", "megadepot", "matwarehouse", "matpark", "matterminal"] },
   cropstore: { icon: "🌾", name: "Crop Storage", desc: "Silos and granaries for harvested crops.", members: ["silo", "megasilo", "elevator", "granary", "grainterminal"] },
   coldstore: { icon: "❄️", name: "Cold Storage", desc: "Keeps milk, eggs, meat and fish fresh.", members: ["coldstore", "coldhub", "freezerplant"] },
   feedstore: { icon: "🥣", name: "Feed Storage", desc: "Feed for your animals - the Feed Mill fills it.", members: ["feedshed", "feedsilo", "feedmillstore"] },
-  goodsstore: { icon: "📦", name: "Goods Warehouses", desc: "Store finished goods from your factories.", members: ["warehouse", "storagehall", "logistics", "distribution"] },
+  goodsstore: { icon: "📦", name: "Goods Warehouses", desc: "Store finished goods from your factories.", members: ["warehouse", "storagehall", "logistics", "distribution", "megawarehouse"] },
+  fastfoodstore: { icon: "🥡", name: "Fast-Food Storage", desc: "Pantries and cold rooms that hold goods for your restaurants.", members: ["ffpantry", "ffcoldroom", "ffdistrib"] },
   animals: { icon: "🐄", name: "Animal Farms", desc: "Coops, sheds and ponds. Animals need feed.", members: ["coop", "cowshed", "sheepfarm", "pigpen", "goatfarm", "apiary", "duckpond", "fishpond", "alpacaranch", "oysterbed"] },
   orchards: { icon: "🍎", name: "Orchard Trees", desc: "Fruit trees that regrow after every harvest.", members: ["orchard_apple", "orchard_orange", "orchard_cherry", "orchard_olive", "orchard_coconut"] },
   houses: { icon: "🏠", name: "Houses", desc: "Family homes, from tiny houses to mansions.", members: ["h_tiny", "house", "cottage", "bungalow", "h_suburb", "farmhouse", "duplex", "townhouse", "chalet", "victorian", "villa", "h_brownstone", "h_rowhouses", "mansion", "h_farmstead", "h_treehouse"] },

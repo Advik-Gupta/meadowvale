@@ -241,7 +241,7 @@ extraInfo = function (e) {
   if (e && BUILD[e.t].produce && !e.build) {
     const s = staffRatio(e),
       quarry = S.workers.some((w) => w.role === "quarryman");
-    html += `<div class="pp-sec"><div class="pp-sec-h">⚙️ Collection</div><div class="pp-note">${s > 0 ? "Residents working here collect everything into storage automatically." : quarry ? "Your Quarry Workers collect from here." : "Hire residents (connect it to a road) or a Quarry Worker from the Job Board and it will be collected automatically."}${e.full ? '</div><div class="pp-warn">📦 Storage is full — build a Material Yard or Depot.' : ""}</div></div>`;
+    html += `<div class="pp-sec"><div class="pp-sec-h">⚙️ Collection</div><div class="pp-note">${s > 0 ? "Residents working here collect everything into storage automatically." : quarry ? "Your Quarry Workers collect from here." : "Residents nearby will take jobs here, or hire a Quarry Worker from the Job Board and it will be collected automatically."}${e.full ? '</div><div class="pp-warn">📦 Storage is full — build a Material Yard or Depot.' : ""}</div></div>`;
   }
   return html;
 };

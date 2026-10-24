@@ -215,13 +215,15 @@ function runSuite() {
     startPlace('fence'); const f0 = entsOf('fence').size;
     let row = null; for (let y = WY0; y < WY1 && !row; y++) for (let x = WX0; x < WX1 && !row; x++) { let okRow = true; for (let i = 0; i < 6; i++) if (!canPlace(x + i, y, 1, 1)) okRow = false; if (okRow) row = [x, y]; }
     ptr.last = ''; for (let i = 0; i < 6; i++) { const q = P(row[0] + i + 0.5, row[1] + 0.5); const [sx, sy] = worldToScreen(q[0], q[1]); dragPlaceAt(sx, sy); }
+    ok('dragging plans a path without building yet', entsOf('fence').size === f0 && planTiles().length === 6);
+    planEndDrag(); ACT['plan-build']();
     ok('drag places a whole line', entsOf('fence').size === f0 + 6, entsOf('fence').size - f0);
     cancelMode(true);
   });
 
   section('unlimited staff', () => {
     const n = S.workers.length; S.coins = 1e8; refreshCandidates(); ok('8 candidates offered', S.cands.length >= 8);
-    for (let i = 0; i < 40; i++) { const c = genCandidate('farmhand'); c.cid = 'u' + i; S.cands.push(c); hireWorker(c.cid); }
+    for (let i = 0; i < 40; i++) { const c = genCandidate('lumberjack'); c.cid = 'u' + i; S.cands.push(c); hireWorker(c.cid); }
     ok('can hire 40 more without a cap', S.workers.length === n + 40, S.workers.length - n);
   });
 
@@ -400,6 +402,31 @@ function runSuite() {
     const r = [...entsOf('rail')][0];
     if (r) { onEntityClick(r, 300, 300); ok('track has an edit / move option', document.querySelector('#popup').innerHTML.includes('p-edit')); hidePopup(true); }
     const h2 = [...entsOf('house')][0], f0 = !!h2.flip; rotateEnt(h2); ok('buildings rotate in place', !!h2.flip !== f0);
+  });
+
+  section('city tuning', () => {
+    const home = [...entsOf('house')][0];
+    const far = put('school', ...scan('school', home.x + 20, home.y + 20, home.x + 40, home.y + 40));
+    ok('residents walk to work without a road', reachable(home, far));
+    const kt = scan('ch_taco', WX0, WY0, WX1, WY1); const kitchen = put('ch_taco', ...kt); delete kitchen.build;
+    S.inv.taco = 0; S.coins = Math.max(S.coins, 10000);
+    const o = makeOrder({ taco: 2 }); S.orders.push(o); S.kitT = 0; kitchenTick();
+    ok('fast-food kitchens cook and deliver orders', !S.orders.includes(o));
+    const wall = put('mil_barracks', ...scan('mil_barracks', WX0, WY0, WX1, WY1)); delete wall.build;
+    ok('military buildings add defense points', cityScores().defense > 0 && BUILD.mil_wall.def > 0);
+    openPanel('city', 'overview'); ok('city scores render', $('#modal-body').innerHTML.includes('City scores')); closePanel(true);
+    ok('bigger material depots exist', POOLS.depot.extra.matterminal === 40000 && !!BUILD.ffpantry);
+    S.autoFire = true; const fields = entsOf('field').size;
+    for (let i = 0; i < fields + 6; i++) { const c = genCandidate('farmhand'); c.cid = 'f' + i; S.cands.push(c); _hireTune(c.cid); }
+    for (const w of S.workers) w.hiredAt = 0;
+    S.afT = 0; autoFireTick();
+    const fh = S.workers.filter((w) => w.role === 'farmhand');
+    ok('extra farmhands are let go', fh.reduce((a, w) => a + maxFields(w), 0) - Math.max(...fh.map(maxFields)) < fields && fh.every((w) => w.cfg.fields.length > 0));
+    const c2 = genCandidate('farmhand'); c2.cid = 'jbx'; S.cands.push(c2); const n2 = S.workers.length; hireWorker(c2.cid);
+    ok('no new farmhand without fields to tend', S.workers.length === n2);
+    openPanel('staff', 'staff'); ok('collapse all button', $('#modal-body').innerHTML.includes('grp-all')); closePanel(true);
+    GFX.people = false; render(); GFX.people = true; ok('graphics toggles render', true);
+    openPanel('settings'); ok('graphics settings render', $('#modal-body').innerHTML.includes('Graphics &amp; performance') || $('#modal-body').innerHTML.includes('Graphics & performance')); closePanel(true);
   });
 
   section('dialogs', () => {

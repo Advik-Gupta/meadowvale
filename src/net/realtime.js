@@ -79,6 +79,14 @@ const NET_LOCAL_ACTS = new Set([
   "to-title",
   "store-family",
   "store-back",
+  "plan-build",
+  "plan-undo",
+  "plan-clear",
+  "see-through",
+  "gfx-toggle",
+  "gfx-set",
+  "gfx-preset",
+  "grp-all",
 ]);
 const NET_VIEW_ACTS = new Set([
   "open",
@@ -99,6 +107,11 @@ const NET_VIEW_ACTS = new Set([
   "to-title",
   "store-family",
   "store-back",
+  "see-through",
+  "gfx-toggle",
+  "gfx-set",
+  "gfx-preset",
+  "grp-all",
 ]);
 const NET_BLOCKED_ACTS = new Set(["reset", "new-world", "save-import", "save-paste"]);
 const NET_WRAP_FNS = [
