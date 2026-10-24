@@ -2288,39 +2288,44 @@ function tick() {
   drawMinimap();
 }
 
+function serializeSave() {
+  const ents = [];
+  for (const e of world.ents.values()) {
+    if (e.dying || e.nat) continue;
+    const o = Object.assign({}, e);
+    if (o.moving) {
+      o.x = o.ox;
+      o.y = o.oy;
+    }
+    delete o.moving;
+    delete o.ox;
+    delete o.oy;
+    delete o.born;
+    ents.push(o);
+  }
+  S.cam = { x: cam.x, y: cam.y, z: cam.z };
+  advanceClock();
+  S.clock = clock.t;
+  S.paused = clock.paused;
+  S.speed = clock.speed;
+  return JSON.stringify({ S, ents, nextId: world.nextId, savedAt: Date.now() });
+}
+let lastSavedAt = Date.now();
 function save() {
   if (!S || resetting) return;
   try {
-    const ents = [];
-    for (const e of world.ents.values()) {
-      if (e.dying || e.nat) continue;
-      const o = Object.assign({}, e);
-      if (o.moving) {
-        o.x = o.ox;
-        o.y = o.oy;
-      }
-      delete o.moving;
-      delete o.ox;
-      delete o.oy;
-      delete o.born;
-      ents.push(o);
-    }
-    S.cam = { x: cam.x, y: cam.y, z: cam.z };
-    advanceClock();
-    S.clock = clock.t;
-    S.paused = clock.paused;
-    S.speed = clock.speed;
-    localStorage.setItem(
-      SAVE_KEY,
-      JSON.stringify({ S, ents, nextId: world.nextId, savedAt: Date.now() }),
-    );
+    localStorage.setItem(SAVE_KEY, serializeSave());
+    lastSavedAt = Date.now();
   } catch (err) {
     console.warn("save failed", err);
   }
 }
+let PRELOAD_SAVE = null;
 function load() {
   try {
-    const raw = localStorage.getItem(SAVE_KEY);
+    const raw =
+      PRELOAD_SAVE != null ? PRELOAD_SAVE : localStorage.getItem(SAVE_KEY);
+    PRELOAD_SAVE = null;
     if (!raw) return false;
     let d = JSON.parse(raw);
     if (typeof migrateSave === "function") d = migrateSave(d);
@@ -2475,7 +2480,7 @@ function boot() {
   tick();
   setInterval(tick, 250);
   if (clock.paused) setPaused(true);
-  setInterval(save, 5000);
+  setInterval(save, 60000);
   window.addEventListener("beforeunload", save);
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) save();

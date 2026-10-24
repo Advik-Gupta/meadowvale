@@ -9,7 +9,12 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "bash tests/run.sh",
-    "balance": "bash tests/run.sh balance"
+    "balance": "bash tests/run.sh balance",
+    "server": "node server/index.js",
+    "dev:server": "node --watch server/index.js",
+    "start": "vite build && node server/index.js",
+    "test:server": "node --test tests/server.test.js",
+    "test:multiplayer": "node tests/multiplayer.e2e.js"
   },
   "devDependencies": {
     "vite": "^5.4.0"
@@ -20,5 +25,11 @@
     "isometric",
     "canvas",
     "procedural-generation"
-  ]
+  ],
+  "dependencies": {
+    "dotenv": "^16.6.1",
+    "express": "^4.22.3",
+    "mongodb": "^6.21.0",
+    "ws": "^8.22.0"
+  }
 }

@@ -2,6 +2,12 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   base: './',
+  server: {
+    proxy: {
+      '/api': 'http://localhost:8787',
+      '/ws': { target: 'ws://localhost:8787', ws: true },
+    },
+  },
   plugins: [{
     name: 'meadowvale-module-entry',
     apply: 'build',

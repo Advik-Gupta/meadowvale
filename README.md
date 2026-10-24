@@ -2,7 +2,7 @@
 
 An endless, seeded city-building sandbox that runs in the browser. Start with a small village, grow farms into factories, found new cities across continents, and watch thousands of simulated residents live their lives.
 
-No backend, no accounts - every world is saved in your browser.
+Play offline with worlds saved in your browser, or create an account to build together with friends in live multiplayer worlds.
 
 ## Features
 
@@ -14,15 +14,47 @@ No backend, no accounts - every world is saved in your browser.
 - **Emergency services and traffic.** Police respond to crimes, fire trucks to fires and ambulances to the sick. Cars, buses and pedestrians follow residents' real trips on the road network.
 - **Transport.** Rail networks with commuter trains, modular airports where planes taxi and take off from your runways, sea lanes, and a fleet of ships and aircraft you commission.
 - **Many cities.** Every Town Hall founds a named city. A world map shows everything you have explored and built.
+- **Accounts and live multiplayer.** Sign up, add friends by username, and create online worlds you build in together in real time, with shared cursors and chat. Friends can watch any of your worlds as spectators. Global leaderboards rank worlds by coins, level, population, cities and buildings.
+- **Autosave.** Worlds save every minute (online worlds to your account), and you're asked to save when you leave.
 
 ## Play
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173
+npm run dev        # http://localhost:5173 (offline play works without the server)
 ```
 
-You can also open `index.html` directly in a browser; the game runs as plain scripts with no build step.
+You can also open `index.html` directly in a browser; the game runs as plain scripts with no build step. Online features need the server.
+
+## Online play (accounts, friends, multiplayer)
+
+You need MongoDB (local or Atlas) and Node 20+.
+
+1. Copy `.env.example` to `.env` and fill in the values:
+
+   | Variable         | Meaning                                                                 |
+   | ---------------- | ----------------------------------------------------------------------- |
+   | `PORT`           | Port for the API and WebSocket server (default `8787`)                  |
+   | `MONGODB_URI`    | MongoDB connection string                                               |
+   | `MONGODB_DB`     | Database name (default `meadowvale`)                                    |
+   | `TOKEN_SECRET`   | Long random string used to sign login tokens - keep it secret           |
+   | `TOKEN_TTL_DAYS` | How long a login lasts (default `30`)                                   |
+   | `CORS_ORIGIN`    | Only needed if the game is hosted on a different origin than the server |
+
+2. Run the server and the game together:
+
+   ```bash
+   npm run dev:server   # API + WebSocket on :8787 (restarts on changes)
+   npm run dev          # Vite on :5173, proxies /api and /ws to the server
+   ```
+
+3. For production, `npm start` builds the game into `dist/` and serves it from the same Node process.
+
+If the game is hosted somewhere else, set `window.MEADOWVALE_SERVER = "https://your-server"` before the game scripts load.
+
+### How multiplayer works
+
+Each online world is a room on the server. The first player to open it becomes the **host**: their browser runs the simulation and streams changes to everyone else every 400ms (and immediately after any action). Other players' actions are sent to the host, which applies them and broadcasts the result. If the host leaves, the next player takes over seamlessly. The host saves the world to MongoDB every minute. Spectators get the same live stream but can't change anything.
 
 ### Controls
 
@@ -50,8 +82,10 @@ src/
   content/            building catalogues (cultures, military, landmarks …)
   gameplay/           economy, production, staff, logistics, cities, fleet, automation
   simulation/         residents, traffic, trains, ships & aircraft
-  ui/                 panels and HUD, census dashboard, title screen
-tests/                headless-browser test suite and balance simulation
+  ui/                 panels and HUD, census dashboard, title screen, accounts, store families, touch
+  net/                REST client and the live multiplayer sync
+server/               Express + MongoDB API (accounts, friends, worlds, leaderboards) and the WebSocket relay
+tests/                headless-browser suite, balance simulation, server and multiplayer tests
 docs/GAME_PLAN.md     the original design document
 ```
 
@@ -60,11 +94,13 @@ The game files share one global scope and are loaded in a fixed order (see `inde
 ## Tests
 
 ```bash
-npm test             # runs tests/suite.js in headless Chrome
-npm run balance      # economy pacing simulation
+npm test                 # runs tests/suite.js in headless Chrome
+npm run balance          # economy pacing simulation
+npm run test:server      # API + WebSocket tests (needs MongoDB)
+npm run test:multiplayer # 3 real browsers: host, guest and spectator in one live world
 ```
 
-The tests need Google Chrome. Set `CHROME=/path/to/chrome` if it's not in the default macOS location.
+The browser tests need Google Chrome. Set `CHROME=/path/to/chrome` if it's not in the default macOS location. The server and multiplayer tests use `TEST_MONGODB_URI` (default `mongodb://127.0.0.1:27017`) and create and then drop a temporary database.
 
 ## Build
 
